@@ -5,44 +5,22 @@ import PomeloClient from '../lib/main'
 const client = new PomeloClient()
 
 // init
-function queryEntry(uid: any, callback: Function) {
-  var route = 'gate.gateHandler.queryEntry';
+function queryEntry(vendor: string, token: string, callback: Function) {
   client.init({
-    host: window.location.hostname,
-    port: 3014,
+    url: 'ws://localhost:3579',
+    docsRoute: 'connector.meta.docs',
     log: true,
   }, function () {
-    client.request(route, {
-      uid: uid
-    }, function (data: any) {
-      client.disconnect();
-      if (data.code === 500) {
-        return;
-      }
-      callback(data.host, data.port);
-    });
+    client.request('connector.auth.login', {vendor, token}, function (response: any) {
+      console.log(response);
+
+      callback();
+    })
   });
-};
+}
 
 
-queryEntry('uid', function (host: string, port: string | number) {
-  client.init({
-    host: host,
-    port: port,
-    log: true
-  }, function () {
-    var route = "connector.entryHandler.enter";
-    client.request(route, {
-      username: 'username',
-      rid: 'rid-1'
-    }, function (data: any) {
-      if (data.error) {
-        console.log('request error')
-        return;
-      }
-      console.log(data)
-      console.log('success request')
-    });
-  });
+queryEntry('default', 'buddy-01', function () {
+  console.log('after login.');
 });
 

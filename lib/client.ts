@@ -1,7 +1,7 @@
 
 
 import Emitter from './emitter';
-import Protobuf from './protobuf';
+import DynamicProtobuf from './protobuf';
 
 import {
     JS_WS_CLIENT_TYPE,
@@ -24,13 +24,13 @@ import {
 // }
 
 export interface InitProps {
-    host: string;
-    port: string | number;
+    url: string;
     log: boolean;
     encrypt?: boolean;
     user?: any;
     maxReconnectAttempts?: number;
     reconnect?: boolean;
+    docsRoute?: string;
     handshakeCallback?: CallBackFunc;
     [key: string]: any;
     // encode: (reqId: number, route: string, msg: any) => void;
@@ -41,7 +41,7 @@ type CallBackFunc = (data?: any) => void;
 
 export class PitayaClient extends Emitter {
     private socket?: WebSocket | null;
-    private protobuf: Protobuf;
+    private dynamicProtobuf: DynamicProtobuf;
     private reqId: number = 0;
     private callbacks: any = {};
     private handlers: any = {};
@@ -61,13 +61,10 @@ export class PitayaClient extends Emitter {
     private heartbeatTimeoutId?: number | null;
     private handshakeCallback?: CallBackFunc;
 
-
-    // private decode: Function;
-    // private encode: Function;
+    private docsRoute?: string;
 
     private reconnect: boolean = false;
     private reconncetTimer?: number;
-    private reconnectUrl?: string;
     private reconnectAttempts: number = 0;
     private reconnectionDelay: number = 5000;
 
@@ -90,33 +87,34 @@ export class PitayaClient extends Emitter {
         this.handlers[PackageTypes.TYPE_HEARTBEAT] = this.heartbeat.bind(this);
         this.handlers[PackageTypes.TYPE_DATA] = this.onData.bind(this);
         this.handlers[PackageTypes.TYPE_KICK] = this.onKick.bind(this);
-        this.protobuf = new Protobuf()
+        this.dynamicProtobuf = new DynamicProtobuf()
     }
 
 
     public init(params: InitProps, callback?: CallBackFunc) {
-        const { host, port, user, handshakeCallback: callBack } = params;
-        let url = 'ws://' + host;
-        if (port) {
-            url += ':' + port;
-        }
+        const { user, handshakeCallback: callBack, docsRoute } = params;
+
         this.handshakeBuffer.user = user;
         this.handshakeCallback = callBack;
         this.initCallback = callback;
 
-        this.connect(params, url)
+        this.docsRoute = docsRoute;
+
+        this.connect(params)
     }
 
-    private connect(params: InitProps, url: string = '') {
+    private connect(params: InitProps) {
+        const { url } = params;
         console.log('connect to ' + url);
+
         const maxReconnectAttempts = params.maxReconnectAttempts || DEFAULT_MAX_RECONNECT_ATTEMPTS;
         if (window.localStorage && window.localStorage.getItem('protos') && this.protoVersion === 0) {
             const protos = JSON.parse(window.localStorage.getItem('protos') as string);
             this.protoVersion = protos.version || 0;
             this.serverProtos = protos.server || {};
             this.clientProtos = protos.version || {};
-            if (!!this.protobuf) {
-                this.protobuf.init({ encoderProtos: this.clientProtos, decoderProtos: this.serverProtos });
+            if (!!this.dynamicProtobuf) {
+                this.dynamicProtobuf.init({ encoderProtos: this.clientProtos, decoderProtos: this.serverProtos });
             }
         }
         this.handshakeBuffer.sys.version = this.protoVersion;
@@ -154,7 +152,7 @@ export class PitayaClient extends Emitter {
                 this.reconnect = true;
                 this.reconnectAttempts++;
                 this.reconncetTimer = setTimeout(() => {
-                    this.connect(params, this.reconnectUrl);
+                    this.connect(params);
                 }, this.reconnectionDelay);
                 this.reconnectionDelay *= 2;
             }
@@ -206,8 +204,8 @@ export class PitayaClient extends Emitter {
         const type = reqId ? MessageTypes.TYPE_REQUEST : MessageTypes.TYPE_NOTIFY;
 
         //compress message by protobuf
-        if (this.protobuf && this.clientProtos[route]) {
-            msg = this.protobuf.encode(route, msg);
+        if (this.dynamicProtobuf && this.clientProtos[route]) {
+            msg = this.dynamicProtobuf.encode(route, msg);
         } else {
             msg = Protocol.strencode(JSON.stringify(msg));
         }
@@ -372,8 +370,8 @@ export class PitayaClient extends Emitter {
             //Save protobuf protos to localStorage
             window.localStorage.setItem('protos', JSON.stringify(protos));
 
-            if (!!this.protobuf) {
-                this.protobuf.init({ encoderProtos: protos.client, decoderProtos: protos.server });
+            if (!!this.dynamicProtobuf) {
+                this.dynamicProtobuf.init({ encoderProtos: protos.client, decoderProtos: protos.server });
             }
 
         }
@@ -400,8 +398,8 @@ export class PitayaClient extends Emitter {
 
             route = msg.route = this.abbrs[route];
         }
-        if (this.protobuf && this.serverProtos[route]) {
-            return this.protobuf.decode(route, msg.body);
+        if (this.dynamicProtobuf && this.serverProtos[route]) {
+            return this.dynamicProtobuf.decode(route, msg.body);
         } else {
             return JSON.parse(Protocol.strdecode(msg.body));
         }
