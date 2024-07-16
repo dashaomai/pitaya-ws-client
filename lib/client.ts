@@ -58,8 +58,8 @@ export class PitayaClient extends Emitter {
     private heartbeatTimeout: number = 0;
     private nextHeartbeatTimeout: number = 0;
     private gapThreshold: number = 100;   // heartbeat gap threshold
-    private heartbeatId?: number | null;
-    private heartbeatTimeoutId?: number | null;
+    private heartbeatId?: number;
+    private heartbeatTimeoutId?: number;
     private handshakeCallback?: CallBackFunc;
 
     private docsRoute?: string;
@@ -237,11 +237,11 @@ export class PitayaClient extends Emitter {
 
         if (this.heartbeatId) {
             clearTimeout(this.heartbeatId);
-            this.heartbeatId = null;
+            this.heartbeatId = undefined;
         }
         if (this.heartbeatTimeoutId) {
             clearTimeout(this.heartbeatTimeoutId);
-            this.heartbeatTimeoutId = null;
+            this.heartbeatTimeoutId = undefined;
         }
     };
 
@@ -297,7 +297,7 @@ export class PitayaClient extends Emitter {
             return;
         }
         this.heartbeatId = setTimeout(() => {
-            this.heartbeatId = null;
+            this.heartbeatId = undefined;
             this.send(obj);
             this.nextHeartbeatTimeout = Date.now() + this.heartbeatTimeout;
             this.heartbeatTimeoutId = setTimeout(this.heartbeatTimeoutCb, this.heartbeatTimeout);
