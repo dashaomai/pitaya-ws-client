@@ -2,7 +2,7 @@ import codec from "./codec";
 import { TYPES } from './constants';
 import { isSimpleType } from './utils'
 
-export default class MessageEncoder {
+export class DynamicMessageEncoder {
     public protos: any = {};
     private checkMessage: CheckMessage;
 
@@ -188,4 +188,12 @@ class CheckMessage {
         return codec.encodeUInt32((tag << 3) | value);
     }
 
+}
+
+
+
+export class StaticMessageEncoder {
+    encode(route: string, msg: any) {
+        console.log('[encode]', route, msg);
+    }
 }

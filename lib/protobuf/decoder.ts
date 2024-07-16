@@ -1,7 +1,7 @@
 import codec from "./codec";
 import { isSimpleType } from './utils'
 
-export default class MessageDecoder {
+export class DynamicMessageDecoder {
     private buffer: any;
     private offset: number = 0;
     public protos:any = {};
@@ -141,5 +141,9 @@ export default class MessageDecoder {
     // }
 }
 
-
+export class StaticMessageDecoder {
+    decode(route: string, msg: Uint8Array) {
+        console.log('[decoder]', route, msg);
+    }
+}
 
