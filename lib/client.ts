@@ -39,7 +39,7 @@ export interface InitProps {
 
 type CallBackFunc = (data?: any) => void;
 
-export class PomeloClient extends Emitter {
+export class PitayaClient extends Emitter {
     private socket?: WebSocket | null;
     private protobuf: Protobuf;
     private reqId: number = 0;
@@ -56,7 +56,7 @@ export class PomeloClient extends Emitter {
     private heartbeatInterval: number = 0;
     private heartbeatTimeout: number = 0;
     private nextHeartbeatTimeout: number = 0;
-    private gapThreshold: number = 100;   // heartbeat gap threashold
+    private gapThreshold: number = 100;   // heartbeat gap threshold
     private heartbeatId?: number | null;
     private heartbeatTimeoutId?: number | null;
     private handshakeCallback?: CallBackFunc;

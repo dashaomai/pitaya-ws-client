@@ -1,1 +1,1 @@
-export { PomeloClient as default } from './client';
+export { PitayaClient as default } from './client';

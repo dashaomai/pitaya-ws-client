@@ -1,6 +1,6 @@
 // version and name
-export const JS_WS_CLIENT_TYPE = 'pomelo-websocket-client';
-export const JS_WS_CLIENT_VERSION: string | number = "1.0.2";
+export const JS_WS_CLIENT_TYPE = 'pitaya-ws-client';
+export const JS_WS_CLIENT_VERSION: string | number = "1.2.0";
 
 // result status code
 export const RES_OK = 200;
