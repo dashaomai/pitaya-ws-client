@@ -1,3 +1,5 @@
+import {gunzipSync, unzlibSync} from 'fflate'
+
 import {
     copyArray,
     encodeMsgBody,
@@ -36,12 +38,64 @@ const ByteArray = Uint8Array
 const utf8Encoder = new TextEncoder()
 const utf8Decoder = new TextDecoder('UTF-8')
 
+const enum CompressionType {
+    UnCompression,
+    Zlib    ,
+    Gzip    ,
+}
+
+/**
+ * 检查指定输入包是否为 zlib 或 gzip 压缩
+ * @param data
+ * @returns boolean
+ */
+function isCompressed(data: Uint8Array): CompressionType {
+    const d0 = data[0]
+    const d1 = data[1]
+
+    if (data.length > 2) {
+        if (d0 === 0x78 &&
+            (d1 === 0x9C ||
+                d1 === 0x01 ||
+                d1 === 0xDA ||
+                d1 === 0x5E)) {
+            return CompressionType.Zlib
+        } else if (d0 === 0x1F && d1 === 0x8B) {
+            return CompressionType.Gzip
+        }
+    }
+
+    return CompressionType.UnCompression
+}
+
+/**
+ * 按照指定压缩格式，对内容进行解压缩展开
+ * @param data
+ */
+ function inflateData(data: Uint8Array) {
+    const type = isCompressed(data)
+
+    switch (type) {
+        case CompressionType.Zlib:
+            return unzlibSync(data)
+        case CompressionType.Gzip:
+            return gunzipSync(data)
+        default:
+            return data
+    }
+}
+
 class Protocol {
     static strencode(str: any) {
         return utf8Encoder.encode(str)
     }
+
     static strdecode(buffer: any) {
-        return utf8Decoder.decode(buffer)
+        return utf8Decoder.decode(inflateData(buffer))
+    }
+
+    static inflate(data: Uint8Array) {
+        return inflateData(data)
     }
 }
 
@@ -80,7 +134,7 @@ class PackageProtocol {
 
 class MessageProtocol {
     static encode(id: number, type: number, compressRoute: number, route: any, msg: any) {
-        // caculate message max length
+        // calculate max length of the message
         let idBytes = msgHasId(type) ? caculateMsgIdBytes(id) : 0;
         let msgLen = MSG_FLAG_BYTES + idBytes;
 

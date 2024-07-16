@@ -25,7 +25,7 @@ export default defineConfig({
         {
           dir: "dist",
           format: 'umd',
-          entryFileNames: "pomelo-client.umd.js",
+          entryFileNames: "pitaya-ws-client.umd.js",
           name: 'PomeloClient',
         }
       ],
