@@ -157,16 +157,14 @@ class CheckMessage {
     }
 
     encodeArray(array: any, proto: any, offset: number, buffer: any, protos: any) {
-        let i = 0;
-
         if (isSimpleType(proto.type)) {
             offset = this.writeBytes(buffer, offset, this.encodeTag(proto.type, proto.tag));
             offset = this.writeBytes(buffer, offset, codec.encodeUInt32(array.length));
-            for (i = 0; i < array.length; i++) {
+            for (let i = 0; i < array.length; i++) {
                 offset = this.encodeProp(array[i], proto.type, offset, buffer);
             }
         } else {
-            for (i = 0; i < array.length; i++) {
+            for (let i = 0; i < array.length; i++) {
                 offset = this.writeBytes(buffer, offset, this.encodeTag(proto.type, proto.tag));
                 offset = this.encodeProp(array[i], proto.type, offset, buffer, protos);
             }

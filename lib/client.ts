@@ -125,7 +125,7 @@ export class PitayaClient extends Emitter {
         ws.binaryType = "arraybuffer";
 
         ws.onopen = () => {
-            if (!!this.reconnect) {
+            if (this.reconnect) {
                 this.emit('reconnect');
                 // console.log("reconnect")
             }
