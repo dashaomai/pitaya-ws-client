@@ -42,7 +42,7 @@ type CallBackFunc = (data?: any) => void;
 export class PitayaClient extends Emitter {
     private socket?: WebSocket | null;
     private dynamicProtobuf: DynamicProtobuf;
-    private staticProtobuf: StaticProtobuf;
+    private staticProtobuf?: StaticProtobuf;
     private reqId: number = 0;
     private callbacks: any = {};
     private handlers: any = {};
@@ -89,7 +89,6 @@ export class PitayaClient extends Emitter {
         this.handlers[PackageTypes.TYPE_DATA] = this.onData.bind(this);
         this.handlers[PackageTypes.TYPE_KICK] = this.onKick.bind(this);
         this.dynamicProtobuf = new DynamicProtobuf()
-        this.staticProtobuf = new StaticProtobuf()
     }
 
 
@@ -101,6 +100,10 @@ export class PitayaClient extends Emitter {
         this.initCallback = callback;
 
         this.docsRoute = docsRoute;
+
+        if (docsRoute) {
+            this.staticProtobuf = new StaticProtobuf(docsRoute)
+        }
 
         this.connect(params)
     }
@@ -153,6 +156,7 @@ export class PitayaClient extends Emitter {
             if (!!params.reconnect && this.reconnectAttempts < maxReconnectAttempts) {
                 this.reconnect = true;
                 this.reconnectAttempts++;
+                // @ts-ignore
                 this.reconncetTimer = setTimeout(() => {
                     this.connect(params);
                 }, this.reconnectionDelay);
@@ -296,10 +300,12 @@ export class PitayaClient extends Emitter {
             // already in a heartbeat interval
             return;
         }
+        // @ts-ignore
         this.heartbeatId = setTimeout(() => {
             this.heartbeatId = undefined;
             this.send(obj);
             this.nextHeartbeatTimeout = Date.now() + this.heartbeatTimeout;
+            // @ts-ignore
             this.heartbeatTimeoutId = setTimeout(this.heartbeatTimeoutCb, this.heartbeatTimeout);
         }, this.heartbeatInterval);
     };
@@ -307,6 +313,7 @@ export class PitayaClient extends Emitter {
     private heartbeatTimeoutCb() {
         let gap = this.nextHeartbeatTimeout - Date.now();
         if (gap > this.gapThreshold) {
+            // @ts-ignore
             this.heartbeatTimeoutId = setTimeout(this.heartbeatTimeoutCb, gap);
         } else {
             console.error('server heartbeat timeout');

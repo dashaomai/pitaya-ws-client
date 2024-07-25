@@ -187,11 +187,3 @@ class CheckMessage {
     }
 
 }
-
-
-
-export class StaticMessageEncoder {
-    encode(route: string, msg: any) {
-        console.log('[encode]', route, msg);
-    }
-}

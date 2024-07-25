@@ -140,10 +140,3 @@ export class DynamicMessageDecoder {
     //     return (!protos.__tags[this.peekHead().tag]);
     // }
 }
-
-export class StaticMessageDecoder {
-    decode(route: string, msg: Uint8Array) {
-        console.log('[decoder]', route, msg);
-    }
-}
-

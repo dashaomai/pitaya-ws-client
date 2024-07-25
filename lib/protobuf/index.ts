@@ -1,6 +1,8 @@
-import {DynamicMessageEncoder, StaticMessageEncoder} from "./encoder"
-import {DynamicMessageDecoder, StaticMessageDecoder} from "./decoder"
-
+import {DynamicMessageEncoder} from "./encoder"
+import {DynamicMessageDecoder} from "./decoder"
+import {protos} from "../protos/pitaya/bundle";
+const Doc = protos.Doc;
+const ProtoDescriptor = protos.ProtoDescriptor;
 
 export interface ProtobufInitProps {
     encoderProtos: any;
@@ -37,27 +39,63 @@ export class DynamicProtobuf {
  * 并进行静态编/解码的逻辑
  */
 export class StaticProtobuf {
-    private encoder: StaticMessageEncoder;
-    private decoder: StaticMessageDecoder;
+    private descriptorsRoute: string;
+    private readonly routes: Set<string>;
 
-    constructor() {
-        this.encoder = new StaticMessageEncoder();
-        this.decoder = new StaticMessageDecoder();
+    constructor(
+        private readonly docsRoute: string,
+    ) {
+        this.descriptorsRoute = '';
+        this.routes = new Set();
+
+        this.routes.add(this.docsRoute);
     }
 
-    lookupRequest(_route: string): boolean {
-        return false
+    lookupRequest(route: string): boolean {
+        return this.routes.has(route)
     }
 
-    lookupResponse(_route: string): boolean {
-        return false
+    lookupResponse(route: string): boolean {
+        return this.routes.has(route)
     }
 
-    encode(key: string, msg: any) {
-        return this.encoder?.encode(key, msg)
+    encode(route: string, msg: any) {
+        if (route === this.docsRoute) {
+            return msg
+        } else if (route === this.descriptorsRoute) {
+            return this.encodeDescriptors(msg)
+        } else {
+            return this.encodeGeneric(route, msg)
+        }
     }
 
-    decode(key: string, msg: Uint8Array) {
-        return this.decoder?.decode(key, msg)
+    private encodeDescriptors(msg: any) {
+        return msg
+    }
+
+    private encodeGeneric(_route: string, msg: any) {
+        return msg
+    }
+
+    decode(route: string, msg: Uint8Array) {
+        if (route === this.docsRoute) {
+            return this.decodeDocs(msg)
+        } else if (route === this.descriptorsRoute) {
+            return this.decodeDescriptors(msg)
+        } else {
+            return this.decodeGeneric(route, msg)
+        }
+    }
+
+    private decodeDocs(msg: Uint8Array) {
+        return Doc.decode(msg)
+    }
+
+    private decodeDescriptors(msg: any) {
+        return ProtoDescriptor.decode(msg)
+    }
+
+    private decodeGeneric(_route: string, msg: any) {
+        return msg
     }
 }
